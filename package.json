@@ -1,0 +1,22 @@
+{
+  "name": "handleliste",
+  "version": "1.0.0",
+  "description": "handleliste app",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rubenring/handleliste.git"
+  },
+  "keywords": [
+    "handleliste"
+  ],
+  "author": "Reuben Ringdal",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rubenring/handleliste/issues"
+  },
+  "homepage": "https://github.com/rubenring/handleliste#readme"
+}
