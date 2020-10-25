@@ -4,7 +4,7 @@ services:
     handleliste-prod:
         container_name: handleliste-prod
         build:
-            context: .
+            context: ./handleliste_app
             dockerfile: Dockerfile.prod
         ports:
             - "1337:80"

@@ -1,0 +1,16 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "shoppingcart api",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "reuben ringdal",
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  }
+}

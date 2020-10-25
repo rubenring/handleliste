@@ -1,0 +1,27 @@
+version: "3.7"
+
+services:
+  client:
+    container_name: handleliste
+    build:
+      context: ./handleliste_app
+      dockerfile: Dockerfile
+    volumes:
+      - "./handleliste_app:/app"
+      - "/app/node_modules"
+    ports:
+      - 3000:3000
+    restart: on-failure
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    restart: on-failure
+    container_name: api
+    volumes:
+      - /app/node_modules # Inside the container, don't try to override this folder, just leave as is
+      - ./api:/app # Look at the server directory and copy everything into the app folder in the container
