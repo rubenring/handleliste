@@ -1,10 +1,34 @@
 import dotenv from "dotenv";
 import express from "express";
+import path from "path";
+import apiRoutes from "./routes/index";
+import mongoose from "mongoose";
 
 dotenv.config();
 
-const app = express();
+mongoose
+  .connect(
+    `mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}`,
+    {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    }
+  )
+  .then(() => {
+    console.log(`Database connected`);
 
-app.listen({ port: process.env.PORT }, () => {
-  console.log(`🚀 Server listening on port ${process.env.PORT}`);
-});
+    const app = express();
+
+    app.use(express.json());
+
+    app.use(express.static(path.join(__dirname, "/static")));
+
+    app.use("/api", apiRoutes);
+
+    app.listen({ port: process.env.PORT }, () => {
+      console.log(`🚀 Server listening on port ${process.env.PORT}`);
+    });
+  })
+  .catch((e) => {
+    console.log(`CONNECTION ERROR ${e}`);
+  });
