@@ -7,13 +7,10 @@ import mongoose from "mongoose";
 dotenv.config();
 
 mongoose
-  .connect(
-    `mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}`,
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    }
-  )
+  .connect("mongodb://localhost:27017/sisselogrubenshandleliste", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
     console.log(`Database connected`);
 
