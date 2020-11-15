@@ -1,16 +1,16 @@
 import dotenv from "dotenv";
 import express from "express";
 import path from "path";
-import apiRoutes from "./routes/index";
+import apiRoutes from "./routes/index.js";
 import mongoose from "mongoose";
-
+import dbConfig from "../configurations/dbConfigurations.js";
 dotenv.config();
 
 mongoose
-  .connect("mongodb://localhost:27017/sisselogrubenshandleliste", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(
+    `${dbConfig.mongodb.url}/${dbConfig.mongodb.databaseName}`,
+    dbConfig.mongodb.options
+  )
   .then(() => {
     console.log(`Database connected`);
 
@@ -20,6 +20,7 @@ mongoose
 
     app.use(express.static(path.join(__dirname, "/static")));
 
+    var test = "test";
     app.use("/api", apiRoutes);
 
     app.listen({ port: process.env.PORT }, () => {

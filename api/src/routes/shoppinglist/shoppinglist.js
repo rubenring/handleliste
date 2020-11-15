@@ -1,8 +1,10 @@
 import express from "express";
-import Shoppinglists from "./schema";
-import Products from "../products/schema";
-import ShoppinglistStatus from "../../database/schemas/Status";
+import Shoppinglists from "../../database/schemas/shoppinglist.js";
+import StatusList, { singleStatus } from "../../database/schemas/status.js";
 import moment from "moment";
+import mongoose from "mongoose";
+import { user } from "../../database/schemas/user.js";
+
 const router = express.Router();
 
 router.get("/shoppinglists", async (req, res) => {
@@ -23,14 +25,28 @@ router.get("/shoppinglists/:id", async (req, res) => {
 });
 router.post("/shoppinglists/", async (req, res) => {
   try {
-    const status = new ShoppinglistStatus({
-      name: "Active",
-      createdAt: moment().format(),
+    const temp_singleStatus = mongoose.model("singleStatus", singleStatus);
+    const temp_user = mongoose.model("user", user);
+
+    const statusList = new StatusList({
+      updatedAt: new Date(),
+      statusList: [
+        new temp_singleStatus({
+          name: "Active",
+          createdAt: moment(),
+        }),
+      ],
+      status: temp_singleStatus,
     });
     const shoppinglist = new Shoppinglists({
       name: req.body.name,
-      products: [],
-      status: [status],
+      items: [],
+      statusList,
+      createdBy: new temp_user({
+        username: "reuben",
+        email: "reuben@reuben.no",
+        password: "pass",
+      }),
     });
     await shoppinglist.save();
     res.send(shoppinglist);
