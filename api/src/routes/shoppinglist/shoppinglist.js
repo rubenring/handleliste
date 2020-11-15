@@ -3,7 +3,7 @@ import Shoppinglists from "../../database/schemas/shoppinglist.js";
 import StatusList, { singleStatus } from "../../database/schemas/status.js";
 import moment from "moment";
 import mongoose from "mongoose";
-import { user } from "../../database/schemas/user.js";
+import { User } from "../../database/schemas/User.js";
 
 const router = express.Router();
 
@@ -26,7 +26,7 @@ router.get("/shoppinglists/:id", async (req, res) => {
 router.post("/shoppinglists/", async (req, res) => {
   try {
     const temp_singleStatus = mongoose.model("singleStatus", singleStatus);
-    const temp_user = mongoose.model("user", user);
+    const temp_user = mongoose.model("User", User);
 
     const statusList = new StatusList({
       updatedAt: new Date(),
@@ -42,11 +42,7 @@ router.post("/shoppinglists/", async (req, res) => {
       name: req.body.name,
       items: [],
       statusList,
-      createdBy: new temp_user({
-        username: "reuben",
-        email: "reuben@reuben.no",
-        password: "pass",
-      }),
+      createdBy: new temp_user({}),
     });
     await shoppinglist.save();
     res.send(shoppinglist);

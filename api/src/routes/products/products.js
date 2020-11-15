@@ -1,6 +1,6 @@
 import express from "express";
 import Products from "../../database/schemas/product.js";
-
+import { verifyToken } from "../../middlewares/authJwt.js";
 const router = express.Router();
 
 /*
@@ -9,7 +9,7 @@ const router = express.Router();
     price: float/number
 
 */
-router.get("/products", async (req, res) => {
+router.get("/products", [verifyToken], async (req, res) => {
   try {
     const products = await Products.find();
     res.send(products);

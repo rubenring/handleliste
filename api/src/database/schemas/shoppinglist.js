@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { shoppinglistitem } from "./shoppingListItem.js";
-import { user } from "./user.js";
+import { User } from "./User.js";
 import { statusList, singleStatus } from "./status.js";
 
 export const shoppinglistSchema = new mongoose.Schema({
@@ -17,7 +17,7 @@ export const shoppinglistSchema = new mongoose.Schema({
     required: false,
   },
   createdBy: {
-    type: user,
+    type: User,
     required: true,
   },
 });
