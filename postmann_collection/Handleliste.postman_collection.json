@@ -1,0 +1,312 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Handleliste",
+		"_postman_id": "03c5f05d-8017-7338-4884-25be489b8a6c",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "products",
+			"description": "",
+			"item": [
+				{
+					"name": "get products",
+					"request": {
+						"url": "http://localhost:5000/api/products",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"test\",\n\t\"price\": 10\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "put products",
+					"request": {
+						"url": "http://localhost:5000/api/products/5fa2fb0948bf5a0f58d6077d",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Norvegia\",\n\t\"price\": \"55\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "delete products",
+					"request": {
+						"url": "http://localhost:5000/api/products/5fa1c438f781a06994268c68",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "post products",
+					"request": {
+						"url": "http://localhost:5000/api/products/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Leverpostei\",\n\t\"price\": 20\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "shoppinglists",
+			"description": "",
+			"item": [
+				{
+					"name": "get shoppinglists",
+					"request": {
+						"url": "http://localhost:5000/api/shoppinglists",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"test\": \"test\",\n\t\"test2\": \"test2\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "get shoppinglists by id",
+					"request": {
+						"url": "http://localhost:5000/api/shoppinglists/5fa7cda82f40cf3f10f3b1e7",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"test\": \"test\",\n\t\"test2\": \"test2\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "post shoppinglists",
+					"request": {
+						"url": "http://localhost:5000/api/shoppinglists",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"Uke 50\",\n\t\"items\": []\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "put shoppinglists",
+					"request": {
+						"url": "http://localhost:5000/api/shoppinglists/id",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"name\": \"test\",\n\t\"products\": [\"id\"]\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "auth",
+			"description": "",
+			"item": [
+				{
+					"name": "signin",
+					"request": {
+						"url": "http://localhost:5000/api/signin/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"test@test.com\",\n\t\"username\": \"test\",\n\t\"password\": \"test\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "singup",
+					"request": {
+						"url": "http://localhost:5000/api/signup/",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"email\": \"test@test.com\",\n\t\"username\": \"test\",\n\t\"password\": \"test\"\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "shoppinglistitem",
+			"description": "",
+			"item": [
+				{
+					"name": "get shoppinglists/item",
+					"request": {
+						"url": "http://localhost:5000/api/shoppinglists/5fb0fbc8a2b06e3d38b17f7d/product/",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "get shoppinglists/item by id",
+					"request": {
+						"url": "http://localhost:5000/api/shoppinglists/5fa300f4ba6b3f5004603044/product/5fa2f6d8d03887ce4fcd766c",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "delete shoppinglists/item",
+					"request": {
+						"url": "http://localhost:5000/api/shoppinglists/5fb0fbc8a2b06e3d38b17f7d/product/5fa2f6d8d03887ce4fcd766c",
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": ""
+					},
+					"response": []
+				},
+				{
+					"name": "put shoppinglists/item",
+					"request": {
+						"url": "http://localhost:5000/api/shoppinglists/5fb0fed6229c946508fa89ce/product/5fb0f7f16c852906e4ddcf39",
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n\t\"qty\": 3\n}"
+						},
+						"description": ""
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
