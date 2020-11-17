@@ -1,25 +1,20 @@
 import mongoose from "mongoose";
-import { shoppinglistitem } from "./shoppingListItem.js";
-import { User } from "./User.js";
-import { statusList, singleStatus } from "./status.js";
+const Schema = mongoose.Schema;
 
-export const shoppinglistSchema = new mongoose.Schema({
+export const shoppinglistSchema = new Schema({
   name: {
     type: String,
     required: true,
   },
-  status: {
-    type: singleStatus,
-  },
-  statusList: statusList,
+  status: { type: Schema.Types.ObjectId, ref: "SingleStatusModel" },
+  statusList: { type: Schema.Types.ObjectId, ref: "status" },
   items: {
-    type: [shoppinglistitem],
+    type: [{ type: Schema.Types.ObjectId, ref: "shoppinglistitem" }],
     required: false,
   },
-  createdBy: {
-    type: User,
-    required: true,
-  },
+  createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+  updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+  lastUpdated: Date,
 });
 
 export default mongoose.model("shoppinglist", shoppinglistSchema);

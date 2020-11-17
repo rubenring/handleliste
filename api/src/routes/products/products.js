@@ -3,64 +3,84 @@ import Products from "../../database/schemas/product.js";
 import { verifyToken } from "../../middlewares/authJwt.js";
 const router = express.Router();
 
-/*
-    id: firestoreId
-    name: string,
-    price: float/number
-
-*/
-router.get("/products", [verifyToken], async (req, res) => {
+router.use(verifyToken);
+router.get("/products", async (req, res) => {
   try {
     const products = await Products.find();
-    res.send(products);
+    res.json(products);
   } catch (e) {
     res.status(400).json({ msg: `${e.message}` });
   }
 });
 router.get("/products/:id", async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const product = await Products.findById(req.params.id);
-    res.send(product);
+    const product = await Products.findById(id);
+    if (product === null) {
+      return res.status(404).json({
+        msg: `no product with id ${id}`,
+      });
+    }
+    res.json(product);
   } catch (e) {
     res.status(400).json({ msg: `${e.message}` });
   }
 });
 router.post("/products", async (req, res) => {
+  const { price, name } = req.body;
+  if (!price || !name)
+    return res.status(404).json({
+      msg: `price or name not set`,
+    });
   try {
+    const excists = await Products.exists({
+      name: name,
+    });
+    if (excists) {
+      return res.status(409).json({
+        msg: `product with name ${name} already excists`,
+      });
+    }
     const product = new Products({
-      name: req.body.name,
-      price: req.body.price,
+      name: name,
+      price: price,
     });
     await product.save();
-    res.send(product);
+    const newProduct = await Products.findById(id);
+
+    res.json(newProduct);
   } catch (e) {
-    res.status(400);
-    res.json({ msg: `${e.message}` });
+    res.status(400).json({ msg: `${e.message}` });
   }
 });
 router.put("/products/:id", async (req, res) => {
   try {
-    const product = await Products.findById(req.params.id);
-    if (req.body.name) {
-      product.name = req.body.name;
-    }
-    if (req.body.price) {
-      product.price = req.body.price;
-    }
-    await product.save();
-    res.json(product);
+    const { id } = req.params;
+    const { name, price } = req.body;
+    if (!price && !name)
+      return res.status(404).json({
+        msg: "no fields to update",
+      });
+    const update = {};
+    const filter = { _id: id };
+    if (name) update.name = name;
+    if (price) update.price = price;
+    await Products.updateOne(filter, update);
+    const newProduct = await Products.findById(id);
+    return res.json(newProduct);
   } catch {
-    res.status(404);
-    res.json({ msg: `No product with id ${id}` });
+    return res.status(404).json({ msg: `No product with id ${id}` });
   }
 });
 router.delete("/products/:id", async (req, res) => {
-  const id = req.params.id;
+  const { id } = req.params;
   try {
-    await Products.deleteOne({ _id: id });
-    res.status(204);
-  } catch {
-    res.status(404).json({ msg: `No product with id ${id}` });
+    const status = await Products.deleteOne({ _id: id });
+    if (status.deletedCount === 0) return res.sendStatus(404);
+    return res.sendStatus(204);
+  } catch (e) {
+    return res.status(500).json({ msg: e.message });
   }
 });
 export default router;

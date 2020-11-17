@@ -1,10 +1,9 @@
 import mongoose from "mongoose";
-import { product } from "./product.js";
 const Schema = mongoose.Schema;
 
-const shoppinglistitem = new mongoose.Schema({
+const shoppinglistitem = new Schema({
   qty: Number,
-  product: product,
+  product: { type: Schema.Types.ObjectId, ref: "Product" },
 });
 export { shoppinglistitem };
 export default mongoose.model("shoppinglistitem", shoppinglistitem);

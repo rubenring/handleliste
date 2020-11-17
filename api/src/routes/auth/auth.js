@@ -8,13 +8,14 @@ import {
 import authConfig from "../../../configurations/auth.config.js";
 import User from "../../database/schemas/User.js";
 import Role from "../../database/schemas/Role.js";
+import logger from "../../middlewares/logging.js";
 
 const router = express.Router();
 
 router.post(
   "/signup",
   [checkDuplicateUsernameOrEmail, checkRolesExisted],
-  (req, res) => {
+  async (req, res) => {
     const user = new User({
       username: req.body.username,
       email: req.body.email,
@@ -71,26 +72,30 @@ router.post(
   }
 );
 
-router.post("/signin", (req, res) => {
-  User.findOne({
-    username: req.body.username,
-  })
-    .populate("roles", "-__v")
-    .exec((err, user) => {
-      if (err) {
-        res.status(500).send({ message: err });
-        return;
-      }
+router.post(
+  "/signin",
+  (req, res, next) => {
+    console.log(req.hostname);
+    next();
+  },
+  async (req, res) => {
+    try {
+      const user = await User.findOne({
+        username: req.body.username,
+      });
+      console.log(user);
+
+      user.populate("roles", "-__v");
 
       if (!user) {
         return res.status(404).send({ message: "User Not found." });
       }
+      console.log(user);
 
-      var passwordIsValid = bcrypt.compareSync(
+      const passwordIsValid = await bcrypt.compare(
         req.body.password,
         user.password
       );
-
       if (!passwordIsValid) {
         return res.status(401).send({
           accessToken: null,
@@ -103,17 +108,20 @@ router.post("/signin", (req, res) => {
       });
 
       var authorities = [];
-
       for (let i = 0; i < user.roles.length; i++) {
-        authorities.push("ROLE_" + user.roles[i].name.toUpperCase());
+        const role = await Role.findById(user.roles[i]._id).exec();
+        authorities.push("ROLE_" + role.name.toUpperCase());
       }
-      res.status(200).send({
+      res.status(200).json({
         id: user._id,
         username: user.username,
         email: user.email,
         roles: authorities,
         accessToken: token,
       });
-    });
-});
+    } catch (e) {
+      return res.status(500).send({ message: e.message });
+    }
+  }
+);
 export default router;

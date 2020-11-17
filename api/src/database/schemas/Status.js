@@ -10,7 +10,11 @@ export const singleStatus = new Schema({
 });
 export const statusList = new Schema({
   updatedAt: Date,
-  statuslist: [singleStatus],
+  items: [{ type: Schema.Types.ObjectId, ref: "SingleStatusModel" }],
 });
 
+export const SingelStatusModel = mongoose.model(
+  "SingleStatusModel",
+  singleStatus
+);
 export default mongoose.model("status", statusList);

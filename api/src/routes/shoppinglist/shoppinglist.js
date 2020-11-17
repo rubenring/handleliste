@@ -1,64 +1,133 @@
 import express from "express";
 import Shoppinglists from "../../database/schemas/shoppinglist.js";
-import StatusList, { singleStatus } from "../../database/schemas/status.js";
+import StatusList, {
+  SingelStatusModel,
+} from "../../database/schemas/status.js";
 import moment from "moment";
-import mongoose from "mongoose";
-import { User } from "../../database/schemas/User.js";
-
+import moongoose from "mongoose";
+import User from "../../database/schemas/User.js";
+import { verifyToken } from "../../middlewares/authJwt.js";
+import { findShoppinglistById, findShoppinglists } from "../utils/findUtls.js";
 const router = express.Router();
 
-router.get("/shoppinglists", async (req, res) => {
+router.use(verifyToken);
+/**
+ * sort 
+ *
+ *    const listWithStatus = list.map((shoppinglist) => {
+          const status = shoppinglist.statusList.items.sort(
+            (a, b) => b.createdAt - a.createdAt
+          );
+          return status;
+        });
+ */
+
+router.get("/shoppinglist", async (req, res) => {
   try {
-    const shoppinglists = await Shoppinglists.find();
-    res.send(shoppinglists);
+    const list = await findShoppinglists();
+    res.json(list);
   } catch (e) {
-    res.status(400).json({ msg: `${e.message}` });
+    res.status(500).json({ msg: e.message });
   }
 });
-router.get("/shoppinglists/:id", async (req, res) => {
+
+router.get("/shoppinglist/:id", async (req, res) => {
+  const { id } = req.params;
   try {
-    const shoppinglist = await Shoppinglists.findById(req.params.id);
+    const shoppinglist = await findShoppinglistById(id);
     res.send(shoppinglist);
   } catch (e) {
     res.status(400).json({ msg: `${e.message}` });
   }
 });
-router.post("/shoppinglists/", async (req, res) => {
-  try {
-    const temp_singleStatus = mongoose.model("singleStatus", singleStatus);
-    const temp_user = mongoose.model("User", User);
 
+router.post("/shoppinglist/", async (req, res) => {
+  try {
+    const { name } = req.body;
+    const excists = await Shoppinglists.exists({
+      name: name,
+    });
+    if (excists) {
+      return res.status(409).json({
+        msg: `Shoppinglist with name ${name} already exists`,
+      });
+    }
+    const singleStatus = new SingelStatusModel({
+      _id: new moongoose.Types.ObjectId(),
+      name: "Active",
+      createdAt: moment(),
+    });
+    await singleStatus.save();
     const statusList = new StatusList({
+      _id: new moongoose.Types.ObjectId(),
       updatedAt: new Date(),
-      statusList: [
-        new temp_singleStatus({
-          name: "Active",
-          createdAt: moment(),
-        }),
-      ],
-      status: temp_singleStatus,
+      items: [singleStatus._id],
     });
+    await statusList.save();
+
+    const user = await User.findById(req.user.id);
+
     const shoppinglist = new Shoppinglists({
-      name: req.body.name,
+      name: name,
       items: [],
-      statusList,
-      createdBy: new temp_user({}),
+      status: singleStatus._id,
+      statusList: statusList._id,
+      createdBy: user._id,
+      updatedBy: user._id,
+      lastUpdated: moment(),
     });
-    await shoppinglist.save();
-    res.send(shoppinglist);
+
+    const saved = await shoppinglist.save();
+    const responseModel = await findShoppinglistById(saved._id);
+    res.json(responseModel);
   } catch (e) {
-    res.status(400);
-    res.json({ msg: `${e.message}` });
+    res.status(500).json({ msg: `${e.message}` });
   }
 });
-router.put("/shoppinglists", (req, res) => {
-  const body = req.body;
-  res.json(body);
+router.put("/shoppinglist/:id", async (req, res) => {
+  try {
+    const { name } = req.body;
+    const { id } = req.params;
+    if (!id)
+      return res.status(400).json({
+        msg: "param id not defined",
+      });
+    if (!name)
+      return res.status(400).json({
+        msg: "body param name not defined",
+      });
+    const excists = await Shoppinglists.exists({
+      name: name,
+    });
+    if (excists) {
+      return res.status(409).json({
+        msg: `Shoppinglist with name ${name} already exists`,
+      });
+    }
+    const filter = { _id: id };
+    const update = {
+      name: name,
+      lastUpdated: moment(),
+    };
+
+    await Shoppinglists.updateOne(filter, update);
+    const newList = await findShoppinglistById(id);
+
+    return res.json(newList);
+  } catch (e) {
+    return res.status(500).json({ msg: e.message });
+  }
 });
 
-router.delete("/shoppinglists:id", (req, res) => {
-  const id = req.params.id;
-  res.json({ id });
+router.delete("/shoppinglist/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const status = await Shoppinglists.deleteOne({ _id: id });
+    if (status.deletedCount === 0) return res.sendStatus(404);
+    return res.sendStatus(204);
+  } catch (e) {
+    return res.status(500).json({ msg: e.message });
+  }
 });
 
 export default router;
