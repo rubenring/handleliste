@@ -7,27 +7,32 @@ import { verifyToken } from "../../middlewares/authJwt.js";
 import { findShoppinglistById } from "../utils/findUtls.js";
 router.use(verifyToken);
 
-router.get("/shoppinglists/:listid/product/", async (req, res) => {
+router.get("/:listid/product/", async (req, res) => {
   try {
     const list = await Shoppinglists.findById(req.params.listid).populate({
       path: "items",
+      populate: {
+        path: "product",
+      },
     });
-    const allProductsInnList = list.items;
-    res.json(allProductsInnList);
+    res.json(list.items);
   } catch (e) {
     res.status(500).json({ msg: e.message });
   }
 });
 
-router.get("/shoppinglists/:listid/product/:itemid", async (req, res) => {
+router.get("/:listid/product/:itemid", async (req, res) => {
   const { listid, itemid } = req.params;
   try {
     const list = await Shoppinglists.findById(listid);
     if (!list)
       return res.status(404).json({ msg: `no list with id ${listid} found` });
-    const product = list.items.filter((item) => item._id == itemid);
-    if (product.length > 0) {
-      return res.json(product[0]);
+    const exists = await ShoppinglistItem.exists({
+      _id: itemid,
+    });
+    if (exists) {
+      const response = await ShoppinglistItem.findOne({ _id: itemid });
+      res.json(response);
     } else {
       return res
         .status(404)
@@ -38,18 +43,31 @@ router.get("/shoppinglists/:listid/product/:itemid", async (req, res) => {
   }
 });
 
-router.put("/shoppinglists/:listid/product/:productid", async (req, res) => {
+router.put("/:listid/product/:productid", async (req, res) => {
   const { productid, listid } = req.params;
   try {
-    const list = await Shoppinglists.findById(listid);
+    const list = await Shoppinglists.findById(listid).populate({
+      path: "items",
+      populate: {
+        path: "product",
+      },
+    });
     if (!list)
       return res
         .status(404)
         .json({ msg: `no shoppinglist with id ${listid} found` });
+    const excists = list.items.filter((listitems) => {
+      return listitems.product._id.toString() === productid.toString();
+    });
+    if (excists.length > 0) {
+      return res.status(409).json({
+        msg: `product with id ${productid} exists in list`,
+      });
+    }
     const listItem = new ShoppinglistItem({
-      _id: productid,
       product: productid,
       qty: req.body.qty | 1,
+      createdBy: req.user.id,
     });
     await listItem.save();
     await list.items.addToSet(listItem._id);
@@ -61,16 +79,16 @@ router.put("/shoppinglists/:listid/product/:productid", async (req, res) => {
   }
 });
 
-router.delete("/shoppinglists/:listid/product", async (req, res) => {
+router.delete("/:listid/product", async (req, res) => {
   const { listid } = req.params;
   try {
     const list = await findShoppinglistById(listid);
     if (!list)
       return res.status(404).json({ msg: `no shoppinglist with id ${listid}` });
-    const listOfProductIds = list.items.map((item) => item._id);
+    const shoppingListItemIds = list.items.map((item) => item._id);
     const delResult = await ShoppinglistItem.deleteMany({
       _id: {
-        $in: listOfProductIds,
+        $in: shoppingListItemIds,
       },
     });
     list.items = [];
@@ -85,7 +103,7 @@ router.delete("/shoppinglists/:listid/product", async (req, res) => {
   }
 });
 
-router.delete("/shoppinglists/:listid/product/:productid", async (req, res) => {
+router.delete("/:listid/product/:productid", async (req, res) => {
   const { productid, listid } = req.params;
   try {
     const product = await Products.findById(productid);
@@ -95,19 +113,18 @@ router.delete("/shoppinglists/:listid/product/:productid", async (req, res) => {
       return res.status(404).json({ msg: `no shoppinglist with id ${listid}` });
     if (shoppinglist.items === 0)
       return res.status(404).json({ msg: `no items in shoppinglist` });
-    // const excists = await ShoppinglistItem.exists({
-    //   _id: productid,
-    // });
-    // if (!excists) {
-    //   return res.status(409).json({
-    //     msg: `no product with id ${productid} exists in list`,
-    //   });
-    // }
+    const excists = await ShoppinglistItem.exists({
+      _id: productid,
+    });
+    if (!excists) {
+      return res.status(409).json({
+        msg: `no product with id ${productid} exists in list`,
+      });
+    }
 
     list.products.pull(product);
-    const newList = await list.save();
-    const response = await findShoppinglistById(newList._id);
-    res.json(response);
+    await list.save();
+    res.status(204);
   } catch (e) {
     res.status(500).json({ msg: e.message });
   }

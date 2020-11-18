@@ -14,7 +14,8 @@ export const shoppinglistSchema = new Schema({
   },
   createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
-  lastUpdated: Date,
+  createdAt: { type: Date, default: Date.now },
+  lastUpdated: { type: Date, default: Date.now },
 });
 
 export default mongoose.model("shoppinglist", shoppinglistSchema);

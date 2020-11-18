@@ -17,6 +17,7 @@ const User = new Schema({
       ref: "Role",
     },
   ],
+  createdAt: { type: Date, default: Date.now },
 });
 
 export { User };

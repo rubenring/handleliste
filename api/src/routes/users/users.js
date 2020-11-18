@@ -1,28 +1,39 @@
 import express from "express";
+import User from "../../database/schemas/User.js";
+import { verifyToken } from "../../middlewares/authJwt";
 const router = express.Router();
 
-router.get("/user", async (req, res) => {
+router.use(verifyToken);
+
+router.get("/", async (req, res) => {
+  try {
+    const user = await User.findById({ _id: req.user.id })
+      .populate({
+        path: "roles",
+        select: "-_id -__v",
+      })
+      .select(["-password", "-__v", "-_id"]);
+    res.json(user);
+  } catch (e) {
+    res.status(400).json({ msg: e.message });
+  }
+});
+
+router.get("/:username", async (req, res) => {
   try {
   } catch (e) {
     res.status(400).json({ msg: e.message });
   }
 });
 
-router.get("/user/:identifyer", async (req, res) => {
+router.put("/:username", async (req, res) => {
   try {
   } catch (e) {
     res.status(400).json({ msg: e.message });
   }
 });
 
-router.put("/user/:identifyer", async (req, res) => {
-  try {
-  } catch (e) {
-    res.status(400).json({ msg: e.message });
-  }
-});
-
-router.delete("/user/:identifyer", async (req, res) => {
+router.delete("/:username", async (req, res) => {
   try {
   } catch (e) {
     res.status(400).json({ msg: e.message });

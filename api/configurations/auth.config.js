@@ -1,3 +1,3 @@
 export default {
-  secret: "bezkoder-secret-key",
+  secret: "lamaer-og-elefanter-er-fine-dyr",
 };

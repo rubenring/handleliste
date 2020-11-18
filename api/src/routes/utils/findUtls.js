@@ -1,4 +1,5 @@
 import Shoppinglists from "../../database/schemas/shoppinglist.js";
+import RefreshToken from "../../database/schemas/refreshToken.js";
 
 export const findShoppinglistById = async (id) =>
   Shoppinglists.findById(id)

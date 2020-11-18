@@ -2,10 +2,9 @@ import jwt from "jsonwebtoken";
 import config from "../../configurations/auth.config";
 import User from "../database/schemas/User.js";
 import Role from "../database/schemas/Role.js";
-
+import moment from "moment";
 const verifyToken = (req, res, next) => {
   let token = req.headers["x-access-token"];
-
   if (!token) {
     return res.status(403).send({ message: "No token provided!" });
   }
@@ -17,6 +16,7 @@ const verifyToken = (req, res, next) => {
 
     req.user = {
       id: decoded.id,
+      exp: decoded.exp,
     };
     next();
   });

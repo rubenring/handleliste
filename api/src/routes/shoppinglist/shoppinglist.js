@@ -5,24 +5,13 @@ import StatusList, {
 } from "../../database/schemas/status.js";
 import moment from "moment";
 import moongoose from "mongoose";
-import User from "../../database/schemas/User.js";
 import { verifyToken } from "../../middlewares/authJwt.js";
 import { findShoppinglistById, findShoppinglists } from "../utils/findUtls.js";
 const router = express.Router();
 
 router.use(verifyToken);
-/**
- * sort 
- *
- *    const listWithStatus = list.map((shoppinglist) => {
-          const status = shoppinglist.statusList.items.sort(
-            (a, b) => b.createdAt - a.createdAt
-          );
-          return status;
-        });
- */
 
-router.get("/shoppinglist", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const list = await findShoppinglists();
     res.json(list);
@@ -31,7 +20,7 @@ router.get("/shoppinglist", async (req, res) => {
   }
 });
 
-router.get("/shoppinglist/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const shoppinglist = await findShoppinglistById(id);
@@ -41,7 +30,7 @@ router.get("/shoppinglist/:id", async (req, res) => {
   }
 });
 
-router.post("/shoppinglist/", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
     const { name } = req.body;
     const excists = await Shoppinglists.exists({
@@ -55,7 +44,7 @@ router.post("/shoppinglist/", async (req, res) => {
     const singleStatus = new SingelStatusModel({
       _id: new moongoose.Types.ObjectId(),
       name: "Active",
-      createdAt: moment(),
+      createdAt: moment().utc(),
     });
     await singleStatus.save();
     const statusList = new StatusList({
@@ -65,16 +54,14 @@ router.post("/shoppinglist/", async (req, res) => {
     });
     await statusList.save();
 
-    const user = await User.findById(req.user.id);
-
     const shoppinglist = new Shoppinglists({
       name: name,
       items: [],
       status: singleStatus._id,
       statusList: statusList._id,
-      createdBy: user._id,
-      updatedBy: user._id,
-      lastUpdated: moment(),
+      createdBy: req.user.id,
+      updatedBy: req.user.id,
+      lastUpdated: moment().utc(),
     });
 
     const saved = await shoppinglist.save();
@@ -84,7 +71,7 @@ router.post("/shoppinglist/", async (req, res) => {
     res.status(500).json({ msg: `${e.message}` });
   }
 });
-router.put("/shoppinglist/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const { name } = req.body;
     const { id } = req.params;
@@ -107,7 +94,7 @@ router.put("/shoppinglist/:id", async (req, res) => {
     const filter = { _id: id };
     const update = {
       name: name,
-      lastUpdated: moment(),
+      lastUpdated: moment().utc(),
     };
 
     await Shoppinglists.updateOne(filter, update);
@@ -119,7 +106,7 @@ router.put("/shoppinglist/:id", async (req, res) => {
   }
 });
 
-router.delete("/shoppinglist/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const status = await Shoppinglists.deleteOne({ _id: id });

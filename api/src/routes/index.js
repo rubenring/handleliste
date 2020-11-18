@@ -1,4 +1,5 @@
 import express from "express";
+import healthCheck from "./healthCheck/healthCheck.js";
 import products from "./products/products.js";
 import shoppinglists from "./shoppinglist/shoppinglist.js";
 import shoppinglistsitem from "./shoppinglistItem/shoppinglistitem.js";
@@ -13,10 +14,12 @@ router.use(function (req, res, next) {
   );
   next();
 });
-router.use("/", products);
-router.use("/", shoppinglists);
-router.use("/", shoppinglistsitem);
-router.use("/", user);
-router.use("/", auth);
+router.use("/health/", healthCheck);
+router.use("/auth/", auth);
+//Auth routes
+router.use("/products", products);
+router.use("/shoppinglist", shoppinglists);
+router.use("/shoppinglistitems", shoppinglistsitem);
+router.use("/user", user);
 
 export default router;

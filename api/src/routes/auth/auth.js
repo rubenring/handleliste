@@ -8,7 +8,12 @@ import {
 import authConfig from "../../../configurations/auth.config.js";
 import User from "../../database/schemas/User.js";
 import Role from "../../database/schemas/Role.js";
-import logger from "../../middlewares/logging.js";
+import {
+  generateRefreshToken,
+  genereateJwtToken,
+  getRefreshToken,
+} from "../utils/tokenUtils.js";
+import moment from "moment";
 
 const router = express.Router();
 
@@ -24,7 +29,7 @@ router.post(
 
     user.save((err, user) => {
       if (err) {
-        res.status(500).send({ message: err });
+        res.status(500).json({ msg: err.message });
         return;
       }
 
@@ -35,36 +40,36 @@ router.post(
           },
           (err, roles) => {
             if (err) {
-              res.status(500).send({ message: err });
+              res.status(500).json({ msg: err.message });
               return;
             }
 
             user.roles = roles.map((role) => role._id);
             user.save((err) => {
               if (err) {
-                res.status(500).send({ message: err });
+                res.status(500).json({ msg: err.message });
                 return;
               }
 
-              res.send({ message: "User was registered successfully!" });
+              res.json({ msg: "User was registered successfully!" });
             });
           }
         );
       } else {
         Role.findOne({ name: "user" }, (err, role) => {
           if (err) {
-            res.status(500).send({ message: err });
+            res.status(500).json({ msg: err.message });
             return;
           }
 
           user.roles = [role._id];
           user.save((err) => {
             if (err) {
-              res.status(500).send({ message: err });
+              res.status(500).json({ msg: err.message });
               return;
             }
 
-            res.send({ message: "User was registered successfully!" });
+            res.json({ msg: "User was registered successfully!" });
           });
         });
       }
@@ -72,56 +77,82 @@ router.post(
   }
 );
 
-router.post(
-  "/signin",
-  (req, res, next) => {
-    console.log(req.hostname);
-    next();
-  },
-  async (req, res) => {
-    try {
-      const user = await User.findOne({
-        username: req.body.username,
-      });
-      console.log(user);
+router.post("/signin", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({
+      username: username,
+    });
+    user.populate("roles", "-__v");
 
-      user.populate("roles", "-__v");
-
-      if (!user) {
-        return res.status(404).send({ message: "User Not found." });
-      }
-      console.log(user);
-
-      const passwordIsValid = await bcrypt.compare(
-        req.body.password,
-        user.password
-      );
-      if (!passwordIsValid) {
-        return res.status(401).send({
-          accessToken: null,
-          message: "Invalid Password!",
-        });
-      }
-
-      var token = jwt.sign({ id: user.id }, authConfig.secret, {
-        expiresIn: 86400, // 24 hours
-      });
-
-      var authorities = [];
-      for (let i = 0; i < user.roles.length; i++) {
-        const role = await Role.findById(user.roles[i]._id).exec();
-        authorities.push("ROLE_" + role.name.toUpperCase());
-      }
-      res.status(200).json({
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        roles: authorities,
-        accessToken: token,
-      });
-    } catch (e) {
-      return res.status(500).send({ message: e.message });
+    if (!user) {
+      return res.status(404).json({ msg: "User Not found." });
     }
+
+    const passwordIsValid = await bcrypt.compare(password, user.password);
+    if (!passwordIsValid) {
+      return res.status(401).json({
+        accessToken: null,
+        msg: "Invalid Password!",
+      });
+    }
+    //TODO: Check user._id
+    var token = genereateJwtToken(user);
+    const { exp } = jwt.decode(token);
+
+    var authorities = [];
+    for (let i = 0; i < user.roles.length; i++) {
+      const role = await Role.findById(user.roles[i]._id).exec();
+      authorities.push("ROLE_" + role.name.toUpperCase());
+    }
+
+    const refreshtoken = await generateRefreshToken(user);
+    await refreshtoken.save();
+    res.json({
+      roles: authorities,
+      accessToken: token,
+      refreshToken: refreshtoken.token,
+      expires: exp,
+    });
+  } catch (e) {
+    return res.status(500).json({ msg: e.message });
   }
-);
+});
+router.post("/token", async (req, res) => {
+  const { username, refreshToken } = req.body;
+  try {
+    const user = await User.findOne({
+      username: username,
+    });
+    user.populate("roles", "-__v");
+    if (!user) {
+      return res.status(404).json({ msg: "User Not found." });
+    }
+    const oldRefreshToken = await getRefreshToken(refreshToken);
+    const newRefreshToken = await generateRefreshToken(user);
+    oldRefreshToken.revoked = moment().utc();
+    oldRefreshToken.replacedByToken = newRefreshToken.token;
+    await oldRefreshToken.save();
+    await newRefreshToken.save();
+    var token = genereateJwtToken(user);
+
+    var authorities = [];
+    for (let i = 0; i < user.roles.length; i++) {
+      const role = await Role.findById(user.roles[i]._id).exec();
+      authorities.push("ROLE_" + role.name.toUpperCase());
+    }
+
+    res.json({ token, roles: authorities });
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ msg: e.message });
+  }
+});
+router.post("/token/reject", function (req, res) {
+  var { refreshToken } = req.body;
+  if (refreshToken in refreshTokens) {
+    delete refreshTokens[refreshToken];
+  }
+  res.sendStatus(204);
+});
 export default router;
