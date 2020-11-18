@@ -1,11 +1,13 @@
+import moment from "moment";
 import mongoose from "mongoose";
+
 const Schema = mongoose.Schema;
 
 const schema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: "User" },
   token: String,
   expires: Date,
-  created: { type: Date, default: Date.now },
+  created: { type: Date, default: moment().utc() },
   createdByIp: String,
   revoked: Date,
   revokedByIp: String,
@@ -13,7 +15,7 @@ const schema = new Schema({
 });
 
 schema.virtual("isExpired").get(function () {
-  return Date.now() >= this.expires;
+  return moment().utc() >= this.expires;
 });
 
 schema.virtual("isActive").get(function () {

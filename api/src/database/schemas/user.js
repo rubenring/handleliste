@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import moment from "moment";
 const Schema = mongoose.Schema;
 
 const User = new Schema({
@@ -17,7 +18,7 @@ const User = new Schema({
       ref: "Role",
     },
   ],
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: moment().utc() },
 });
 
 export { User };

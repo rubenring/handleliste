@@ -5,14 +5,13 @@ import {
   checkDuplicateUsernameOrEmail,
   checkRolesExisted,
 } from "../../middlewares/verifySignup.js";
-import authConfig from "../../../configurations/auth.config.js";
 import User from "../../database/schemas/User.js";
 import Role from "../../database/schemas/Role.js";
 import {
   generateRefreshToken,
   genereateJwtToken,
   getRefreshToken,
-} from "../utils/tokenUtils.js";
+} from "../../services/authService.js";
 import moment from "moment";
 
 const router = express.Router();
@@ -79,6 +78,7 @@ router.post(
 
 router.post("/signin", async (req, res) => {
   try {
+    const ipAddress = req.ip;
     const { username, password } = req.body;
     const user = await User.findOne({
       username: username,
@@ -106,7 +106,7 @@ router.post("/signin", async (req, res) => {
       authorities.push("ROLE_" + role.name.toUpperCase());
     }
 
-    const refreshtoken = await generateRefreshToken(user);
+    const refreshtoken = await generateRefreshToken(user, ipAddress);
     await refreshtoken.save();
     res.json({
       roles: authorities,
@@ -119,6 +119,7 @@ router.post("/signin", async (req, res) => {
   }
 });
 router.post("/token", async (req, res) => {
+  const ipAddress = req.ip;
   const { username, refreshToken } = req.body;
   try {
     const user = await User.findOne({
@@ -129,7 +130,7 @@ router.post("/token", async (req, res) => {
       return res.status(404).json({ msg: "User Not found." });
     }
     const oldRefreshToken = await getRefreshToken(refreshToken);
-    const newRefreshToken = await generateRefreshToken(user);
+    const newRefreshToken = await generateRefreshToken(user, ipAddress);
     oldRefreshToken.revoked = moment().utc();
     oldRefreshToken.replacedByToken = newRefreshToken.token;
     await oldRefreshToken.save();
@@ -144,7 +145,6 @@ router.post("/token", async (req, res) => {
 
     res.json({ token, roles: authorities });
   } catch (e) {
-    console.log(e);
     res.status(500).json({ msg: e.message });
   }
 });

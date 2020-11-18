@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import moment from "moment";
 const Schema = mongoose.Schema;
 
 export const shoppinglistSchema = new Schema({
@@ -14,8 +15,8 @@ export const shoppinglistSchema = new Schema({
   },
   createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
-  createdAt: { type: Date, default: Date.now },
-  lastUpdated: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: moment().utc() },
+  lastUpdated: { type: Date, default: moment().utc() },
 });
 
 export default mongoose.model("shoppinglist", shoppinglistSchema);
