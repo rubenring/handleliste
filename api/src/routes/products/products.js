@@ -1,12 +1,19 @@
 import express from "express";
 import Products from "../../database/schemas/product.js";
 import { verifyToken } from "../../middlewares/authJwt.js";
+import {
+  deleteProduct,
+  getProductById,
+  getProductsWithUser,
+  throwIfProductExists,
+  updateProduct,
+} from "../../services/productService.js";
 const router = express.Router();
 
 router.use(verifyToken);
 router.get("/", async (req, res) => {
   try {
-    const products = await Products.find().populate({ path: "User" });
+    const products = await getProductsWithUser();
     res.json(products);
   } catch (e) {
     res.status(400).json({ msg: `${e.message}` });
@@ -14,14 +21,8 @@ router.get("/", async (req, res) => {
 });
 router.get("/:id", async (req, res) => {
   const { id } = req.params;
-
   try {
-    const product = await Products.findById(id);
-    if (product === null) {
-      return res.status(404).json({
-        msg: `no product with id ${id}`,
-      });
-    }
+    const product = await getProductById(id);
     res.json(product);
   } catch (e) {
     res.status(400).json({ msg: `${e.message}` });
@@ -34,14 +35,10 @@ router.post("/", async (req, res) => {
       msg: `price or name not set`,
     });
   try {
-    const excists = await Products.exists({
+    await throwIfProductExists({
       name: name,
     });
-    if (excists) {
-      return res.status(409).json({
-        msg: `product with name ${name} already excists`,
-      });
-    }
+
     const product = new Products({
       name: name,
       price: price,
@@ -69,8 +66,8 @@ router.put("/:id", async (req, res) => {
     const filter = { _id: id };
     if (name) update.name = name;
     if (price) update.price = price;
-    await Products.updateOne(filter, update);
-    const newProduct = await Products.findById(id);
+    await updateProduct(filter, update);
+    const newProduct = await getProductById(id);
     return res.json(newProduct);
   } catch {
     return res.status(404).json({ msg: `No product with id ${id}` });
@@ -80,8 +77,7 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    const status = await Products.deleteOne({ _id: id });
-    if (status.deletedCount === 0) return res.sendStatus(404);
+    await deleteProduct({ _id: id });
     return res.sendStatus(204);
   } catch (e) {
     return res.status(500).json({ msg: e.message });
