@@ -12,7 +12,7 @@ const product = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: moment().utc() },
 });
 export { product };
 export default mongoose.model("Product", product);
