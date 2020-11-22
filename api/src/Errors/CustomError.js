@@ -1,4 +1,13 @@
-class ApiError extends Error {
+import logger from "../logging/config.js";
+
+class CustomErrorsWithLogging extends Error {
+  constructor(message) {
+    super(message);
+    logger.error(`Stack ${this.stack} - message ${message}`);
+  }
+}
+
+class ApiError extends CustomErrorsWithLogging {
   constructor(message) {
     super(message);
     this.name = "ApiError";
@@ -19,11 +28,18 @@ export class NotFound extends ApiError {
     this.status = 404;
   }
 }
+export class NotAuthenticated extends ApiError {
+  constructor(message) {
+    super(message);
+    this.type = "NotAuthenticated";
+    this.status = 401;
+  }
+}
 export class NotAuthorized extends ApiError {
   constructor(message) {
     super(message);
     this.type = "NotAutorized";
-    this.status = 401;
+    this.status = 403;
   }
 }
 export class NotModified extends ApiError {
@@ -34,26 +50,26 @@ export class NotModified extends ApiError {
   }
 }
 
-export class DatabaseError extends Error {
+export class DatabaseError extends CustomErrorsWithLogging {
   constructor(message) {
     super(message);
     this.name = "DatabaseError";
   }
 }
-export class NotFoundInDbError extends Error {
+export class NotFoundInDbError extends DatabaseError {
   constructor(message) {
     super(message);
     this.type = "NotFoundInDbError";
   }
 }
-export class AuthenticationError extends Error {
+export class AuthenticationError extends CustomErrorsWithLogging {
   constructor(message) {
     super(message);
     this.name = "AuthenticationError";
   }
 }
 
-class CryptError extends Error {
+class CryptError extends CustomErrorsWithLogging {
   constructor(message) {
     super(message);
     this.name = "CryptError";

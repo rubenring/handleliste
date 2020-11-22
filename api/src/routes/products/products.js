@@ -1,11 +1,9 @@
 import express from "express";
-import Products from "../../database/schemas/product.js";
 import { verifyToken } from "../../middlewares/authJwt.js";
 import {
   deleteProduct,
   getProductById,
   getProductsWithUser,
-  throwIfProductExists,
   updateProduct,
 } from "../../services/productService.js";
 const router = express.Router();

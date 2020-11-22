@@ -1,4 +1,9 @@
-const logger = (req, res, next) => {
+import logger from "../logging/config.js";
+
+const log = (err, req, res, next) => {
+  logger.error(
+    `${req.method} - ${err.message}  - ${req.originalUrl} - ${req.ip}`
+  );
   next();
 };
-export { logger };
+export default log;

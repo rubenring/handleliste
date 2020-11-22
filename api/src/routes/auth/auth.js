@@ -1,23 +1,20 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import moment from "moment";
 import {
   checkDuplicateUsernameOrEmail,
   checkRolesExisted,
 } from "../../middlewares/verifySignup.js";
-
 import {
   generateRefreshToken,
   genereateJwtToken,
   getRefreshToken,
 } from "../../services/authService.js";
-import moment from "moment";
 import { compareEnctypted } from "../../utils/tokenUtils.js";
 import {
   createUserAndAddRoles,
-  deleteUser,
   findRoleById,
   findSingleUser,
-  findUserById,
 } from "../../services/userService.js";
 import { AuthenticationError } from "../../Errors/CustomError.js";
 

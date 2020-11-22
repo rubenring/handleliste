@@ -2,16 +2,14 @@ import express from "express";
 import moment from "moment";
 import { verifyToken } from "../../middlewares/authJwt.js";
 import {
+  createShoppingList,
   deleteShoppinglistByFilter,
   findShoppinglistById,
   findShoppinglists,
   throwIfShoppinglistExists,
   updateShoppinglist,
 } from "../../services/shoppinglistService.js";
-import {
-  createSingleStatus,
-  createStatusList,
-} from "../../services/statusService.js";
+
 const router = express.Router();
 
 router.use(verifyToken);
@@ -29,7 +27,7 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const shoppinglist = await findShoppinglistById(id);
-    res.send(shoppinglist);
+    res.json(shoppinglist);
   } catch (e) {
     res.status(400).json({ msg: `${e.message}` });
   }
@@ -64,7 +62,7 @@ router.put("/:id", async (req, res) => {
 
     return res.json(newList);
   } catch (e) {
-    return res.status(500).json({ msg: e.message });
+    return res.status(e.status || 500).json({ msg: e.message });
   }
 });
 

@@ -1,10 +1,8 @@
 import express from "express";
-import ShoppinglistItem from "../../database/schemas/shoppingListItem.js";
 const router = express.Router();
 import { verifyToken } from "../../middlewares/authJwt.js";
 import { findShoppinglistById } from "../../services/shoppinglistService.js";
 import {
-  checkIfShoppinglistItemExists,
   getShoppinglistItemById,
   throwIfShoppinglistItemtNotExists,
 } from "../../services/shoppinglistItemService.js";

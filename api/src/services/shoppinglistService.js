@@ -1,6 +1,8 @@
 import Shoppinglists from "../database/schemas/shoppinglist.js";
-import { BadRequest, DatabaseError, NotFound } from "../Errors/CustomError.js";
+import { BadRequest, NotFound } from "../Errors/CustomError.js";
 import { createSingleStatus, createStatusList } from "./statusService.js";
+import moment from "moment";
+
 export const findShoppinglistById = async (id) => {
   const shoppinglist = await Shoppinglists.findById(id)
     .populate({
@@ -32,7 +34,7 @@ export const findShoppinglistById = async (id) => {
     });
 
   if (!shoppinglist) {
-    throw NotFound(`no shoppinglist with id ${id}`);
+    throw new NotFound(`no shoppinglist with id ${id}`);
   } else {
     return shoppinglist;
   }
@@ -71,20 +73,20 @@ export const checkIfShoppinglistExists = async (filter) => {
   return Shoppinglists.exists(filter);
 };
 export const throwIfShoppinglistNotExists = async (filter) => {
-  const excists = checkIfShoppinglistExists(filter);
+  const excists = await checkIfShoppinglistExists(filter);
   if (!excists) {
-    throw new Error(
-      `Shoppinglist with searchfilter ${JSON.stringify(filter)} already excists`
+    throw new BadRequest(
+      `Shoppinglist with searchfilter ${JSON.stringify(
+        filter
+      )} does not excists`
     );
   }
 };
 export const throwIfShoppinglistExists = async (filter) => {
-  const excists = checkIfShoppinglistExists(filter);
+  const excists = await checkIfShoppinglistExists(filter);
   if (excists) {
-    throw new Error(
-      `Shoppinglist with searchfilter ${JSON.stringify(
-        filter
-      )} does not excists`
+    throw new BadRequest(
+      `Shoppinglist with searchfilter ${JSON.stringify(filter)} excists`
     );
   }
 };
@@ -98,7 +100,7 @@ export const createShoppingList = async (
 ) => {
   const singleStatus = await createSingleStatus("Active", moment().utc());
   const statusList = await createStatusList(moment().utc(), [singleStatus._id]);
-  new Shoppinglists({
+  const shoppinglist = new Shoppinglists({
     name: name,
     items: items,
     status: singleStatus._id,
@@ -113,6 +115,7 @@ export const createShoppingList = async (
 };
 
 export const updateShoppinglist = async (name, id) => {
+  console.log(id);
   await throwIfShoppinglistNotExists({ name: name });
 
   if (!id) throw BadRequest("param id not defined");
@@ -124,7 +127,7 @@ export const updateShoppinglist = async (name, id) => {
     lastUpdated: moment().utc(),
   };
   const updated = await Shoppinglists.updateOne(filter, update);
-  return findShoppinglistById(updated.id);
+  return findShoppinglistById(id);
 };
 
 export const deleteShoppinglistByFilter = async (filter) => {
