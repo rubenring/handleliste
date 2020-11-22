@@ -1,31 +1,34 @@
 import authConfig from "../../configurations/auth.config.js";
 import RefreshToken from "../database/schemas/refreshToken.js";
-import randtoken from "rand-token";
 import moment from "moment";
 import jwt from "jsonwebtoken";
+import { BadRequest } from "../Errors/CustomError.js";
+import { generateRandomTokenString } from "../utils/tokenUtils.js";
 
 export const getRefreshToken = async (token) => {
   const rfToken = await RefreshToken.findOne({
     token,
   }).populate("user");
-  if (!rfToken || !rfToken.isActive) throw new Error("Invalid token");
+  if (!rfToken || !rfToken.isActive) throw new BadRequest("Invalid token");
   return rfToken;
 };
 
-export const generateRefreshToken = async (user, ipAddress) => {
+export const generateRefreshToken = async (userId, ipAddress) => {
   const randomToken = generateRandomTokenString();
 
-  return new RefreshToken({
-    user: user.id,
+  const refreshToken = new RefreshToken({
+    user: userId,
     token: randomToken,
     createdByIp: ipAddress,
-    expires: moment().utc().add(30, "s"),
+    expires: moment().utc().add(30, "m"),
   });
+  const savedToken = await refreshToken.save();
+  return getRefreshToken(savedToken.token);
 };
 
-export const genereateJwtToken = (user) => {
+export const genereateJwtToken = (signString) => {
   // create a jwt token containing the user id that expires in 15 minutes
-  return jwt.sign({ sub: user.id, id: user.id }, authConfig.secret, {
+  return jwt.sign({ sub: signString, id: signString }, authConfig.secret, {
     expiresIn: "15m",
   });
 };
@@ -38,5 +41,3 @@ export const revokeToken = async ({ token, ipAddress }) => {
   refreshToken.revokedByIp = ipAddress;
   await refreshToken.save();
 };
-
-export const generateRandomTokenString = () => randtoken.uid(256);

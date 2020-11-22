@@ -2,15 +2,14 @@ import express from "express";
 import moment from "moment";
 import { verifyToken } from "../../middlewares/authJwt.js";
 import {
+  createShoppingList,
   deleteShoppinglistByFilter,
   findShoppinglistById,
   findShoppinglists,
   throwIfShoppinglistExists,
+  updateShoppinglist,
 } from "../../services/shoppinglistService.js";
-import {
-  createSingleStatus,
-  createStatusList,
-} from "../../services/statusService.js";
+
 const router = express.Router();
 
 router.use(verifyToken);
@@ -28,7 +27,7 @@ router.get("/:id", async (req, res) => {
   const { id } = req.params;
   try {
     const shoppinglist = await findShoppinglistById(id);
-    res.send(shoppinglist);
+    res.json(shoppinglist);
   } catch (e) {
     res.status(400).json({ msg: `${e.message}` });
   }
@@ -40,52 +39,30 @@ router.post("/", async (req, res) => {
     await throwIfShoppinglistExists({
       name: name,
     });
-    const singleStatus = await createSingleStatus("Active", moment().utc());
-    const statusList = await createStatusList(moment().utc(), [
-      singleStatus._id,
-    ]);
 
-    await createShoppingList(
+    const shoppinglist = await createShoppingList(
       name,
       [],
-      singleStatus._id,
-      statusList._id,
       req.user.id,
       req.user.id,
       moment().utc()
     );
 
-    const responseModel = await findShoppinglistById(saved._id);
-    res.json(responseModel);
+    res.json(shoppinglist);
   } catch (e) {
-    res.status(500).json({ msg: `${e.message}` });
+    res.status(e.status || 500).json({ msg: e.message });
   }
 });
 router.put("/:id", async (req, res) => {
   try {
     const { name } = req.body;
     const { id } = req.params;
-    if (!id)
-      return res.status(400).json({
-        msg: "param id not defined",
-      });
-    if (!name)
-      return res.status(400).json({
-        msg: "body param name not defined",
-      });
-    await throwIfShoppinglistExists({ name: name });
 
-    const filter = { _id: id };
-    const update = {
-      name: name,
-      lastUpdated: moment().utc(),
-    };
-
-    const newList = await updateShoppinglist(filter, update);
+    const newList = await updateShoppinglist(name, id);
 
     return res.json(newList);
   } catch (e) {
-    return res.status(500).json({ msg: e.message });
+    return res.status(e.status || 500).json({ msg: e.message });
   }
 });
 

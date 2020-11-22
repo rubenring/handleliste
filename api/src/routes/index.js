@@ -5,8 +5,8 @@ import shoppinglists from "./shoppinglist/shoppinglist.js";
 import shoppinglistsitem from "./shoppinglistItem/shoppinglistitem.js";
 import user from "./users/users.js";
 import auth from "./auth/auth.js";
-
 const router = express.Router();
+
 router.use(function (req, res, next) {
   res.header(
     "Access-Control-Allow-Headers",

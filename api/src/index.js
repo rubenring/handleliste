@@ -6,10 +6,11 @@ import seedRoles from "./database/seed/roles.js";
 import cors from "cors";
 import db from "./database/connector.js";
 import morgan from "morgan";
+import logger from "./logging/config.js";
 
 dotenv.config();
 const corsOptions = {
-  origin: "http://localhost:3001",
+  origin: "http://localhost:3002",
 };
 db.then(() => {
   console.log(`Database connected`);
@@ -21,7 +22,7 @@ db.then(() => {
   app.use(express.json());
 
   app.use(express.static(path.join(__dirname, "/static")));
-  app.use(morgan("combined"));
+  app.use(morgan("combined", { stream: logger.stream.write }));
   app.use("/api", apiRoutes);
 
   app.listen({ port: process.env.PORT }, () => {

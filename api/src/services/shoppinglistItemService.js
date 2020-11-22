@@ -38,3 +38,16 @@ export const createShoppinglistItem = async (productId, qty, userId) => {
   const saved = shoppinglistItem.save();
   return getShoppinglistItemById(saved.id);
 };
+
+export const deleteAllItemsInShoppinglist = async (ids) => {
+  //TODO: Add check to see if product exists in listitem;
+  try {
+    return ShoppinglistItem.deleteMany({
+      _id: {
+        $in: shoppingListItemIds,
+      },
+    });
+  } catch (e) {
+    throw new DatabaseError(e.message);
+  }
+};

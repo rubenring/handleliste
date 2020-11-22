@@ -2,24 +2,29 @@ import jwt from "jsonwebtoken";
 import config from "../../configurations/auth.config";
 import User from "../database/schemas/User.js";
 import Role from "../database/schemas/Role.js";
-import moment from "moment";
-const verifyToken = (req, res, next) => {
-  let token = req.headers["x-access-token"];
-  if (!token) {
-    return res.status(403).send({ message: "No token provided!" });
-  }
+import { NotAuthenticated, NotAuthorized } from "../Errors/CustomError";
 
-  jwt.verify(token, config.secret, (err, decoded) => {
-    if (err) {
-      return res.status(401).send({ message: "Unauthorized!" });
+const verifyToken = (req, res, next) => {
+  try {
+    let token = req.headers["x-access-token"];
+    if (!token) {
+      throw new NotAuthorized("No token provided!");
     }
 
-    req.user = {
-      id: decoded.id,
-      exp: decoded.exp,
-    };
-    next();
-  });
+    jwt.verify(token, config.secret, (err, decoded) => {
+      if (err) {
+        throw new NotAuthenticated("Unauthorized!");
+      }
+
+      req.user = {
+        id: decoded.id,
+        exp: decoded.exp,
+      };
+      next();
+    });
+  } catch (e) {
+    res.json({ msg: e.message });
+  }
 };
 
 const isAdmin = (req, res, next) => {
@@ -45,9 +50,7 @@ const isAdmin = (req, res, next) => {
             return;
           }
         }
-
-        res.status(403).send({ message: "Require Admin Role!" });
-        return;
+        throw new NotAuthorized("Require Admin Role!");
       }
     );
   });
