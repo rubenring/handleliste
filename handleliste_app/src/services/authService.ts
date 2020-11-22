@@ -6,7 +6,7 @@ type AuthService = {
 
 export const authService: AuthService = {
   signin: (username: string, password: string) =>
-    axios.post("http://localhost:5000/api/auth/signing", {
+    axios.post("http://localhost:5000/api/auth/signin", {
       username,
       password,
     }),

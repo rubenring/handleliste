@@ -9,7 +9,7 @@ import morgan from "morgan";
 
 dotenv.config();
 const corsOptions = {
-  origin: "http://localhost:3001",
+  origin: "http://localhost:3002",
 };
 db.then(() => {
   console.log(`Database connected`);

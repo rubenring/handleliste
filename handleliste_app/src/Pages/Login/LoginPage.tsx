@@ -6,7 +6,7 @@ export const LoginPage = () => {
   const [password, setPassword] = useState<string>("");
 
   const signin = async (event: MouseEvent<HTMLElement>) => {
-    event.preventDefault;
+    event.preventDefault();
     const response = await authService.signin(username, password);
     console.log(response);
   };
