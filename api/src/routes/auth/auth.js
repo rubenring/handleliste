@@ -1,6 +1,5 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
 import {
   checkDuplicateUsernameOrEmail,
   checkRolesExisted,
@@ -13,6 +12,13 @@ import {
   getRefreshToken,
 } from "../../services/authService.js";
 import moment from "moment";
+import { compareEnctypted } from "../../utils/tokenUtils.js";
+import {
+  createUserAndAddRoles,
+  findRoleById,
+  findSingleUser,
+} from "../../services/userService.js";
+import { AuthenticationError } from "../../Errors/CustomError.js";
 
 const router = express.Router();
 
@@ -20,59 +26,18 @@ router.post(
   "/signup",
   [checkDuplicateUsernameOrEmail, checkRolesExisted],
   async (req, res) => {
-    const user = new User({
-      username: req.body.username,
-      email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, 8),
-    });
-
-    user.save((err, user) => {
-      if (err) {
-        res.status(500).json({ msg: err.message });
-        return;
-      }
-
-      if (req.body.roles) {
-        Role.find(
-          {
-            name: { $in: req.body.roles },
-          },
-          (err, roles) => {
-            if (err) {
-              res.status(500).json({ msg: err.message });
-              return;
-            }
-
-            user.roles = roles.map((role) => role._id);
-            user.save((err) => {
-              if (err) {
-                res.status(500).json({ msg: err.message });
-                return;
-              }
-
-              res.json({ msg: "User was registered successfully!" });
-            });
-          }
-        );
-      } else {
-        Role.findOne({ name: "user" }, (err, role) => {
-          if (err) {
-            res.status(500).json({ msg: err.message });
-            return;
-          }
-
-          user.roles = [role._id];
-          user.save((err) => {
-            if (err) {
-              res.status(500).json({ msg: err.message });
-              return;
-            }
-
-            res.json({ msg: "User was registered successfully!" });
-          });
-        });
-      }
-    });
+    try {
+      const { username, email, password, roles } = req.body;
+      const user = await createUserAndAddRoles(
+        username,
+        email,
+        password,
+        roles
+      );
+      res.json(user);
+    } catch (e) {
+      res.status(e.status || 500).json({ msg: e.message });
+    }
   }
 );
 
@@ -80,34 +45,25 @@ router.post("/signin", async (req, res) => {
   try {
     const ipAddress = req.ip;
     const { username, password } = req.body;
-    const user = await User.findOne({
+    const user = await findSingleUser({
       username: username,
-    });
-    user.populate("roles", "-__v");
+    }).populate("roles", "-__v");
 
-    if (!user) {
-      return res.status(404).json({ msg: "User Not found." });
-    }
-
-    const passwordIsValid = await bcrypt.compare(password, user.password);
+    const passwordIsValid = await compareEnctypted(password, user.password);
     if (!passwordIsValid) {
-      return res.status(401).json({
-        accessToken: null,
-        msg: "Invalid Password!",
-      });
+      throw new AuthenticationError("Invalid Password!");
     }
     //TODO: Check user._id
-    var token = genereateJwtToken(user);
+    var token = genereateJwtToken(user._id);
     const { exp } = jwt.decode(token);
 
     var authorities = [];
     for (let i = 0; i < user.roles.length; i++) {
-      const role = await Role.findById(user.roles[i]._id).exec();
+      const role = await findRoleById(user.roles[i]._id);
       authorities.push("ROLE_" + role.name.toUpperCase());
     }
 
-    const refreshtoken = await generateRefreshToken(user, ipAddress);
-    await refreshtoken.save();
+    const refreshtoken = await generateRefreshToken(user._id, ipAddress);
     res.json({
       roles: authorities,
       accessToken: token,
@@ -115,37 +71,33 @@ router.post("/signin", async (req, res) => {
       expires: exp,
     });
   } catch (e) {
-    return res.status(500).json({ msg: e.message });
+    return res.status(e.status || 500).json({ msg: e.message });
   }
 });
 router.post("/token", async (req, res) => {
   const ipAddress = req.ip;
   const { username, refreshToken } = req.body;
   try {
-    const user = await User.findOne({
+    const user = await findSingleUser({
       username: username,
-    });
-    user.populate("roles", "-__v");
-    if (!user) {
-      return res.status(404).json({ msg: "User Not found." });
-    }
+    }).populate("roles", "-__v");
+
     const oldRefreshToken = await getRefreshToken(refreshToken);
-    const newRefreshToken = await generateRefreshToken(user, ipAddress);
+    const newRefreshToken = await generateRefreshToken(user._id, ipAddress);
     oldRefreshToken.revoked = moment().utc();
     oldRefreshToken.replacedByToken = newRefreshToken.token;
     await oldRefreshToken.save();
-    await newRefreshToken.save();
-    var token = genereateJwtToken(user);
+    var token = genereateJwtToken(user._id);
 
     var authorities = [];
     for (let i = 0; i < user.roles.length; i++) {
-      const role = await Role.findById(user.roles[i]._id).exec();
+      const role = await findRoleById(user.roles[i]._id);
       authorities.push("ROLE_" + role.name.toUpperCase());
     }
 
     res.json({ token, roles: authorities });
   } catch (e) {
-    res.status(500).json({ msg: e.message });
+    res.status(e.status || 500).json({ msg: e.message });
   }
 });
 router.post("/token/reject", function (req, res) {
@@ -153,6 +105,10 @@ router.post("/token/reject", function (req, res) {
   if (refreshToken in refreshTokens) {
     delete refreshTokens[refreshToken];
   }
+  res.sendStatus(204);
+});
+
+router.post("/signout", function (req, res) {
   res.sendStatus(204);
 });
 export default router;
