@@ -4,8 +4,7 @@ import {
   checkDuplicateUsernameOrEmail,
   checkRolesExisted,
 } from "../../middlewares/verifySignup.js";
-import User from "../../database/schemas/User.js";
-import Role from "../../database/schemas/Role.js";
+
 import {
   generateRefreshToken,
   genereateJwtToken,
@@ -15,8 +14,10 @@ import moment from "moment";
 import { compareEnctypted } from "../../utils/tokenUtils.js";
 import {
   createUserAndAddRoles,
+  deleteUser,
   findRoleById,
   findSingleUser,
+  findUserById,
 } from "../../services/userService.js";
 import { AuthenticationError } from "../../Errors/CustomError.js";
 
@@ -47,7 +48,8 @@ router.post("/signin", async (req, res) => {
     const { username, password } = req.body;
     const user = await findSingleUser({
       username: username,
-    }).populate("roles", "-__v");
+    });
+    user.populate("roles", "-__v");
 
     const passwordIsValid = await compareEnctypted(password, user.password);
     if (!passwordIsValid) {
@@ -80,7 +82,8 @@ router.post("/token", async (req, res) => {
   try {
     const user = await findSingleUser({
       username: username,
-    }).populate("roles", "-__v");
+    });
+    user.populate("roles", "-__v");
 
     const oldRefreshToken = await getRefreshToken(refreshToken);
     const newRefreshToken = await generateRefreshToken(user._id, ipAddress);
@@ -101,14 +104,22 @@ router.post("/token", async (req, res) => {
   }
 });
 router.post("/token/reject", function (req, res) {
-  var { refreshToken } = req.body;
-  if (refreshToken in refreshTokens) {
-    delete refreshTokens[refreshToken];
+  try {
+    var { refreshToken } = req.body;
+    if (refreshToken in refreshTokens) {
+      delete refreshTokens[refreshToken];
+    }
+    res.sendStatus(204);
+  } catch (e) {
+    res.status(e.status || 500).json({ msg: e.message });
   }
-  res.sendStatus(204);
 });
 
 router.post("/signout", function (req, res) {
-  res.sendStatus(204);
+  try {
+    res.sendStatus(501);
+  } catch (e) {
+    res.status(e.status || 500).json({ msg: e.message });
+  }
 });
 export default router;

@@ -22,18 +22,10 @@ router.get("/:listid/product/", async (req, res) => {
 });
 
 router.get("/:listid/product/:itemid", async (req, res) => {
-  const { listid, itemid } = req.params;
+  const { itemid } = req.params;
   try {
-    await findShoppinglistById(listid);
-    const exists = await checkIfShoppinglistItemExists({ _id: itemid });
-    if (exists) {
-      const response = await getShoppinglistItemById(itemid);
-      res.json(response);
-    } else {
-      return res
-        .status(404)
-        .json({ msg: `no item with id: ${itemid} in list` });
-    }
+    const response = await getShoppinglistItemById(itemid);
+    res.json(response);
   } catch (e) {
     return res.status(500).json({ msg: e.message });
   }
@@ -43,10 +35,6 @@ router.put("/:listid/product/:productid", async (req, res) => {
   const { productid, listid } = req.params;
   try {
     const list = await findShoppinglistById(listid);
-    if (!list)
-      return res
-        .status(404)
-        .json({ msg: `no shoppinglist with id ${listid} found` });
     const excists = list.items.filter((listitems) => {
       return listitems.product._id.toString() === productid.toString();
     });
@@ -74,14 +62,8 @@ router.delete("/:listid/product", async (req, res) => {
   const { listid } = req.params;
   try {
     const list = await findShoppinglistById(listid);
-    if (!list)
-      return res.status(404).json({ msg: `no shoppinglist with id ${listid}` });
     const shoppingListItemIds = list.items.map((item) => item._id);
-    const delResult = await ShoppinglistItem.deleteMany({
-      _id: {
-        $in: shoppingListItemIds,
-      },
-    });
+    const delResult = await deleteAllItemsInShoppinglist(shoppingListItemIds);
     list.items = [];
     await list.save();
     const response = await findShoppinglistById(listid);
@@ -90,7 +72,7 @@ router.delete("/:listid/product", async (req, res) => {
       deleteresult: delResult,
     });
   } catch (e) {
-    res.status(500).json({ msg: e.message });
+    res.status(e.status || 500).json({ msg: e.message });
   }
 });
 

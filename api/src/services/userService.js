@@ -1,7 +1,12 @@
 import User from "../database/schemas/User.js";
 import Role from "../database/schemas/Role.js";
 
-import { BadRequest, DatabaseError, NotFound } from "../Errors/CustomError.js";
+import {
+  BadRequest,
+  DatabaseError,
+  NotFound,
+  NotModified,
+} from "../Errors/CustomError.js";
 import { enctyptString } from "../utils/tokenUtils.js";
 
 export const createUser = async (username, email, password) => {
@@ -23,7 +28,7 @@ export const createUserAndAddRoles = async (
   password,
   roles
 ) => {
-  const user = createUser(username, email, password);
+  const user = await createUser(username, email, password);
   if (roles) {
     return addRolesToUser(user, roles);
   } else {
@@ -97,5 +102,14 @@ export const findRole = async (filter) => {
     return user;
   } catch (e) {
     throw new DatabaseError(e.message);
+  }
+};
+
+export const deleteUser = async (filter) => {
+  const deletedUser = await User.findOneAndDelete(filter);
+  if (!deletedUser) {
+    throw new NotModified(`No user deleted`);
+  } else {
+    return deletedUser;
   }
 };

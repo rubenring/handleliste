@@ -26,6 +26,14 @@ export class NotAuthorized extends ApiError {
     this.status = 401;
   }
 }
+export class NotModified extends ApiError {
+  constructor(message) {
+    super(message);
+    this.type = "NotModified";
+    this.status = 204;
+  }
+}
+
 export class DatabaseError extends Error {
   constructor(message) {
     super(message);

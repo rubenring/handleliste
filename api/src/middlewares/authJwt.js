@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import config from "../../configurations/auth.config";
 import User from "../database/schemas/User.js";
 import Role from "../database/schemas/Role.js";
-import moment from "moment";
+
 const verifyToken = (req, res, next) => {
   let token = req.headers["x-access-token"];
   if (!token) {

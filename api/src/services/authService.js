@@ -3,6 +3,7 @@ import RefreshToken from "../database/schemas/refreshToken.js";
 import moment from "moment";
 import jwt from "jsonwebtoken";
 import { BadRequest } from "../Errors/CustomError.js";
+import { generateRandomTokenString } from "../utils/tokenUtils.js";
 
 export const getRefreshToken = async (token) => {
   const rfToken = await RefreshToken.findOne({
@@ -16,13 +17,13 @@ export const generateRefreshToken = async (userId, ipAddress) => {
   const randomToken = generateRandomTokenString();
 
   const refreshToken = new RefreshToken({
-    user: id,
+    user: userId,
     token: randomToken,
     createdByIp: ipAddress,
-    expires: moment().utc().add(30, "s"),
+    expires: moment().utc().add(30, "m"),
   });
   const savedToken = await refreshToken.save();
-  return getRefreshToken(savedToken._id);
+  return getRefreshToken(savedToken.token);
 };
 
 export const genereateJwtToken = (signString) => {
