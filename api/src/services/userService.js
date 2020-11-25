@@ -67,15 +67,11 @@ const addRolesToUser = async (user, roles) => {
 };
 
 export const findSingleUser = async (filter) => {
-  try {
-    const user = await User.findOne(filter);
-    if (!user) {
-      throw new NotFound(`no user with ${JSON.stringify(filter)} exists`);
-    }
-    return user;
-  } catch (e) {
-    throw new DatabaseError(e.message);
+  const user = await User.findOne(filter);
+  if (!user) {
+    throw new NotFound(`no user with ${JSON.stringify(filter)} exists`);
   }
+  return user;
 };
 
 export const findUserById = async (id) => {
