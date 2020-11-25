@@ -1,7 +1,8 @@
 import Role from "../schemas/Role";
-
+export const createAdminUser = () => {};
 export default () => {
   Role.estimatedDocumentCount((err, count) => {
+    console.log(err);
     if (!err && count === 0) {
       new Role({
         name: "user",

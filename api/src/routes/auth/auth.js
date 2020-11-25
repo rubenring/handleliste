@@ -70,6 +70,7 @@ router.post("/signin", async (req, res) => {
       expires: exp,
     });
   } catch (e) {
+    console.error(e);
     return res.status(e.status || 500).json({ msg: e.message });
   }
 });

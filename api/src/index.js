@@ -10,7 +10,7 @@ import logger from "./logging/config.js";
 
 dotenv.config();
 const corsOptions = {
-  origin: "http://localhost:3002",
+  origin: "client:3000",
 };
 db.then(() => {
   console.log(`Database connected`);
