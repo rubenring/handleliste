@@ -11,33 +11,43 @@ services:
       - "/app/node_modules"
     ports:
       - 3000:3000
+    expose:
+      - 3000
+    links: [api]
     restart: on-failure
     environment:
       - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - api
   api:
     build:
       context: ./api
       dockerfile: Dockerfile
     ports:
-      - "5001:5001"
+      - "5000:5000"
+    expose:
+      - 5000
+    links: [db]
     restart: on-failure
     container_name: api
     volumes:
       - /app/node_modules # Inside the container, don't try to override this folder, just leave as is
       - ./api:/app # Look at the server directory and copy everything into the app folder in the container
-  mongo-database:
+    depends_on:
+      - db
+  db:
     # pulls the latest, stable image
     image: mongo:latest
     container_name: rubenr-mongodb
-
-    # bind mount volume for MongoDB documents
     volumes:
-      - $PWD/mongo-data:/data/db
-
+      - "./database/mongo-entrypoint/:/docker-entrypoint-initdb.d/"
+    command: [--auth]
+    restart: always
     ports:
       - "27017:27017"
-
-    # configure the Docker entrypoint for MongoDB
+    expose:
+      - 27017
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=1234
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_DB_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_DB_ROOT_PASS}
+      - MONGO_INITDB_DATABASE=${MONGO_DB_INIT_DB}

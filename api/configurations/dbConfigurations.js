@@ -1,7 +1,7 @@
 const config = {
   mongodb: {
     // TODO Change (or review) the url to your MongoDB:
-    url: process.env.DB_HOST || "mongodb://localhost:27018",
+    url: process.env.DB_HOST || "mongodb://admin:1234@db:27017",
 
     // TODO Change this to your database name:
     databaseName: process.env.DB_NAME || "sisselogrubenshandleliste",
