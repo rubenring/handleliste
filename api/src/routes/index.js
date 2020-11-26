@@ -5,6 +5,7 @@ import shoppinglists from "./shoppinglist/shoppinglist.js";
 import shoppinglistsitem from "./shoppinglistItem/shoppinglistitem.js";
 import user from "./users/users.js";
 import auth from "./auth/auth.js";
+
 const router = express.Router();
 
 router.use(function (req, res, next) {
@@ -14,6 +15,16 @@ router.use(function (req, res, next) {
   );
   next();
 });
+// router.use(
+//   "/api-docs",
+//   (req, res, next) => {
+//     swaggerDocument.host = req.get("host");
+//     req.swaggerDoc = swaggerDocument;
+//     next();
+//   },
+//   swaggerUi.serve
+// );
+// router.get("/api-docs", swaggerUi.setup(swaggerDocument));
 router.use("/health/", healthCheck);
 router.use("/auth/", auth);
 //Auth routes

@@ -20,6 +20,39 @@ import { AuthenticationError } from "../../Errors/CustomError.js";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ *
+ * /signin:
+ *   post:
+ *     description: Login to the application
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *      - name: username
+ *         description: Username to use for login.
+ *         in: formData
+ *         required: true
+ *         type: string
+
+ *       - name: password
+ *         description: User's password.
+ *         in: formData
+ *         required: true
+ *         type: string
+ *       - name: email
+ *         description: email.
+ *         in: formData
+ *         required: true
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: login
+ *       400:
+ *         description: Bad Request
+ *       404:
+ *         description: Not Found
+ */
 router.post(
   "/signup",
   [checkDuplicateUsernameOrEmail, checkRolesExisted],
